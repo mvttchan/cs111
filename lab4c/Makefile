@@ -1,0 +1,13 @@
+#NAME:	Matthew Chan
+#EMAIL:	matthew_2185@yahoo.com
+#ID:	805291212
+
+default:
+	gcc -o lab4c_tcp lab4c_tcp.c -g -Wall -Wextra -DDUMMY -lm
+	gcc -o lab4c_tls lab4c_tls.c -g -Wall -Wextra -DDUMMY -lm -lssl -lcrypto
+	chmod +x compile.sh
+	./compile.sh
+clean:
+	rm -f lab4c_tcp lab4c_tls *.tar.gz
+dist:
+	tar -czvf lab4c-805291212.tar.gz lab4c_tcp.c lab4c_tls.c README Makefile compile.sh

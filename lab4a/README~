@@ -1,0 +1,17 @@
+NAME:	Matthew Chan
+EMAIL:	matthew_2185@yahoo.com
+ID:	805291212
+
+my_beaglebone.jpeg: Selfie of me and my Beaglebone Board
+connected.png: Shows that I attained Wifi with the board, as well as showing the change
+	       in hostname as well as IP address
+copy.png:      Shows copying the simple C program "Hello World" into the board
+build_run.png: Shows successful compilation of the C file as well as the output upon
+	       execution
+git.png:       Shows installion of git as well as cloning a repository
+Makefile:      Simple makefile, clean removes the existing tarball and make and dist
+	       produce the tarball
+
+
+Project 4A Spec
+Project 4A Guidelines

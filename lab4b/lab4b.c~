@@ -1,0 +1,191 @@
+//NAME:  Matthew Chan
+//EMAIL: matthew_2185@yahoo.com
+//ID:    805291212
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <getopt.h>
+#include <poll.h>
+#include <time.h>
+#include <mraa/aio.h>
+#include <mraa/gpio.h>
+#include <ctype.h>
+#include <math.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+
+#define B 4275
+#define R0 100000.0
+
+int period = 1;
+char scale = 'F';
+FILE* log_file;
+int stop = 0;
+int log_flag = 0;
+mraa_gpio_context button;
+mraa_aio_context temperature;
+
+float convert_temper_reading(int reading) {
+  float R = 1023.0/((float) reading) - 1.0;
+  R = R0 * R;
+  float C = 1.0/(log(R/R0)/B + 1/298.15) - 273.15;
+  float F = (C * 9) / 5 + 32;
+  if(scale == 'F') return F;
+  else return C;
+}
+
+void print_current_time() {
+  struct timespec ts;
+  struct tm *tm;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  tm = localtime(&(ts.tv_sec));
+  printf("%02d:%02d:%02d ", tm->tm_hour, tm->tm_min, tm->tm_sec);
+  if(log_flag) fprintf(log_file, "%02d:%02d:%02d ", tm->tm_hour, tm->tm_min, tm->tm_sec);
+}
+
+void do_when_pushed() {
+  print_current_time();
+  printf("SHUTDOWN\n");
+  if(log_flag) fprintf(log_file, "SHUTDOWN\n");
+  exit(0);
+}
+
+void print_temperature() {
+  print_current_time();
+  //dummy value
+  //BE SURE TO FIX THIS ASSHOLE
+  float temp = convert_temper_reading(1);
+  printf("%.1f\n", temp);
+  if(log_flag) fprintf(log_file, "%.1f\n", temp);
+}
+
+void handle_input(char* input) {
+  if(strcmp(input, "SCALE=F") == 0) {
+    printf("SCALE=F\n");
+    if(log_flag) fprintf(log_file, "SCALE=F\n");
+  }
+  else if(strcmp(input, "SCALE=C") == 0) {
+    printf("SCALE=C\n");
+    if(log_flag) fprintf(log_file, "SCALE=C\n");
+  }
+  else if(strcmp(input, "STOP") == 0) {
+    printf("STOP\n");
+    if(log_flag) fprintf(log_file, "STOP\n");
+    stop = 1;
+  }
+  else if(strcmp(input, "START") == 0) {
+    printf("SCALE=F\n");
+    if(log_flag) fprintf(log_file, "SCALE=F\n");
+    stop = 0;
+  }
+  else if(strcmp(input, "OFF") == 0) {
+    printf("OFF\n");
+    if(log_flag) fprintf(log_file, "OFF\n");
+    do_when_pushed();
+  }
+  else if(*input == 'P') {
+    if(strstr(input, "PERIOD=") == NULL) return;
+    /*
+    int length = strlen(input) - 1;
+    int i = 7;
+    if(input[i] == 0) return;
+    while(i < length) {
+      if(!isdigit(input[i])) return;
+      ++i;
+    }
+    */
+    int temp =  atoi(&input[7]);
+    if(!temp) return;
+    period = temp;
+    printf("PERIOD=%d\n", period);
+    if(log_flag) fprintf(log_file, "PERIOD=%d\n", period);
+  }
+  else if(*input == 'L') {
+    if(strstr(input, "LOG") == NULL) return;
+    printf("%s\n", input);
+    if(log_flag) fprintf(log_file, "%s\n", input);
+  }
+}
+
+int main(int argc, char* argv[]) {
+  
+  struct option options[] = {
+    {"period", 1, NULL, 'p'},
+    {"scale", 1, NULL, 's'},
+    {"log", 1, NULL, 'l'},
+    {0,0,0,0}
+  };
+
+  int c;
+  while((c = getopt_long(argc, argv, "", options, NULL)) != -1) {
+    switch(c) {
+    case 'p':
+      period  = atoi(optarg);
+      break;
+    case 's':
+      scale = optarg[0];
+      if(toupper(scale) != 0) {
+	fprintf(stderr, "Invalid scale option\n");
+	exit(1);
+      }
+      if(scale == 'F' || scale == 'C') break;
+      fprintf(stderr, "Scale can only be F or C\n");
+      exit(1);
+    case 'l':      
+      log_flag = 1;
+      if(optarg == NULL) {
+	fprintf(stderr, "Invalid log filename\n");
+	exit(1);
+      }
+      log_file = fopen(optarg, "w+");
+      if(log_file == NULL) {
+	fprintf(stderr, "Unable to print log file\n");
+	exit(1);
+      }
+      break;
+    default:
+      fprintf(stderr, "Error in arguments, supports period scale and log only\n");
+      exit(1);
+    }
+  }
+  
+  button = mraa_gpio_init(60);
+  temperature = mraa_aio_init(1);
+  if(button == NULL || temperature == NULL) {
+    fprintf(stderr, "Error initializng button and temperature sensor\n");
+    mraa_deinit();
+    exit(1);
+  }
+  mraa_gpio_dir(button, MRAA_GPIO_IN);
+  mraa_gpio_isr(button, MRAA_GPIO_EDGE_RISING, do_when_pushed, NULL);
+  
+
+  struct pollfd pollfds = {0, POLLIN, 0};
+  char* input;
+  input = (char*)malloc(24 * sizeof(char));
+  if(input == NULL) {
+    fprintf(stderr, "No more memory to allocate, torrent more RAM\n");
+    exit(1);
+  }
+
+  while(1) {
+    if(!stop) {
+      print_temperature();
+    } 
+    if(poll(&pollfds, 1, (period * 1000)) < 0) {
+      fprintf(stderr, "Error polling input\n");
+      exit(1);
+    }
+    if(pollfds.revents & POLLIN) {
+      fgets(input, 24, stdin);
+      handle_input(input);
+    }
+  }
+  
+  mraa_gpio_close(button);
+  mraa_aio_close(temperature);
+  
+  exit(0);
+}

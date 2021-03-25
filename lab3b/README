@@ -1,0 +1,16 @@
+NAME:	Matthew Chan
+EMAIL:	matthew_2185@yahoo.com
+ID:	805291212
+
+lab3b.py:	This source file parses through a CSV file and detects any inconsistencies
+		for the corresponding image file.
+Makefile:	Supports the standard default dist and clean. Clean removes the tarball and
+		the symbolic link while dist makes the tarball used for submission. The default
+		option removes any pre-existing symbolic links for lab3b.py and makes a new
+		symbolic link
+
+The TA notes helped me figure out how to start and structure the assignment. Testing the code
+incrementally proved extremely helpful as the nature of the assignment was very modular. One of
+the hardest parts of this assignment was learning how to use python effectively since we
+haven't done any projects this quarter using python. However, it was a boon to finishing this
+assignment overall.

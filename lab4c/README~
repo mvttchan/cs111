@@ -1,0 +1,20 @@
+NAME:  Matthew Chan
+EMAIL: matthew_2185@yahoo.com
+ID:    805291212
+
+lab4c_tcp.c- Like project 4B but it receives commands from a server instead
+	     using tcp connection
+lab4c_tls.c- Same as above but it encrypts the data when sending it through
+	     the socket. Uses a different port but the same host as before
+Makefile-    Simple makefile with default clean and dist. Default to make
+	     both executables, clean to remove all files made by this makefile
+	     and the dist to make the tarball for submission
+
+The tcp file was a bit difficult to make. Most of the code was from lab4b but
+I made significant changes because some of the functions used before didn't
+work so well this time. Fgets for example didn't give the correct outputs.
+Also the way I printed the temperature was done in parts, when the server
+was expecting them to be done in one print statement. There was also an issue
+with the times not being done at the correct intervals. I tried implementing
+a different way of displaying time but that didn't work. I looked on piazza and
+found that I had to change to nonblocking I/O.

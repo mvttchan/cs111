@@ -1,0 +1,22 @@
+NAME:	Matthew Chan
+EMAIL:	matthew_2185@yahoo.com
+ID:	805291212
+
+lab3a.c:
+	This code parses through an image and determines the file organization within. It lists
+	the super block, group descriptors, free blocks, free inodes, and inode summaries
+	that detail the directories and the used indirect referenes, the single, double and
+	triple blocks included. This program only parses through one group.
+Makefile:
+	A simple makefile to build the program. Comes with a clean and dist to form the tarball
+	needed for submission
+
+One of the biggest problems was maintaining the offsets used to read. Thankfully the discussion
+section and slides provided much needed insight for what numbers we should be expecting. In
+addition, the ext2 file page proved incredibly useful for finding the logical offset for
+the indirect references.
+
+https://www.nongnu.org/ext2-doc/ext2.html
+https://www.tutorialspoint.com/c_standard_library/c_function_gmtime.htm
+https://www.man7.org/linux/man-pages/man3/strftime.3.html
+Project 3A Spec

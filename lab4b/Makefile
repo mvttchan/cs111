@@ -1,0 +1,15 @@
+#NAME:	Matthew Chan
+#EMAIL:	matthew_2185@yahoo.com
+#ID:	805291212
+
+default:
+	gcc -o lab4b lab4b.c -g -Wall -Wextra -DDUMMY -lm
+	chmod +x compile.sh
+	./compile.sh
+check: default
+	chmod +x smoke_tests.sh
+	./smoke_tests.sh
+clean:
+	rm -f lab4b *.tar.gz
+dist:
+	tar -czvf lab4b-805291212.tar.gz lab4b.c README Makefile smoke_tests.sh compile.sh

@@ -1,0 +1,33 @@
+NAME:	Matthew Chan
+EMAIL:	matthew_2185@yahoo.com
+ID:	805291212
+
+lab4b.c:
+	Source file for the beaglebone board to allow me to output and log the temperature as well as
+	timestamp. It has an adjustable period and lets the user stop and start the process at will
+Makefile:
+	Contains the desired default, check, clean, and dist options. Default simply builds the program
+	while check runs this program through automated smoke tests to ensure functionality. Clean removes
+	the files provided by the makefile and dist simply makes the tarball for submission. I had to
+	apply the DDUMMY option
+smoke_tests.sh:
+	Just checks to make sure of the basic functionality of the program. Checks to see if it correctly
+	logs output and if the arguments passed in work
+
+I forgot that strcmp compared up to the null byte, fgets reads up to the newline character so the strcmp
+function caused unnecessary stress when I couldn't find most strings as my input. I had to change the
+last byte from a newline character to the null byte to get it to work. Also, writing to log didn't work
+as planned. After researching, I came across fflush which allowed me to write to log flawlessly.
+
+https://stackoverflow.com/questions/44175151/what-is-the-meaning-of-lm-in-gcc
+https://iotdk.intel.com/docs/master/mraa/
+https://www.tutorialspoint.com/c_standard_library/ctype_h.htm
+https://www.programiz.com/c-programming/library-function/ctype.h/toupper
+https://www.man7.org/linux/man-pages/man2/poll.2.html
+https://www.dummies.com/programming/c/how-to-format-with-printf-in-c-programming/
+https://www.tutorialspoint.com/cprogramming/c_file_io.htm
+https://www.tutorialspoint.com/c_standard_library/c_function_fgets.htm
+https://www.tutorialspoint.com/c_standard_library/c_function_strstr.htm
+https://www.tutorialspoint.com/c_standard_library/c_function_fflush.htm
+Project 4B Spec
+Discussion 1B Slides
