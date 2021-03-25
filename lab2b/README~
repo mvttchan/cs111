@@ -1,0 +1,56 @@
+NAME:	Matthew Chan
+EMAIL:	matthew_2185@yahoo.com
+ID:	805291212
+
+lab2_list.c:
+	The same as project 2A's list C program. Parallel threads adjust a shared resource. Offers
+	synchronization through mutex and spinlocking. This program also now allows the user to partition
+	the shared resource, allowing greater synchronization.
+SortedList.h:
+	Specified header file that serves as the interface for functions that alter the list. This
+	describes a circular doubly linked list.
+SortedList.c:
+	The implementation for the functions of altering the list, comes with lookup, insert, delete,
+	and find length.
+Makefile:
+	Comes with the specified default, tests, profile, graphs, dist, and clean options. The default
+	builds the executable regularly, tests generates the csv file, profile utilizes the profiling
+	tool, graphs builds the graphs as png files, dist makes the tarball for submission, while clean
+	removes the executable and any existing tarballs.
+lab2b_list.csv:
+	The results from running the tests given by the project spec. Tests that have failed to achieve
+	correctness are of course not included.
+profile.out:
+	The breakdown of the function calls within a test case of 1000 iterations, 12 threads with spin
+	locking
+lab2b_#.png:
+	1
+		throughput vs number of threads for mutex and spinlocking
+	2
+		average time for mutex lock acquisition and time per operation
+	3
+		successful iterations vs threads for both synchronizations
+	4
+		throughput vs number of threads for partitioned mutex lists
+	5
+		throughput vs thread count for partitioned spinlocked lists
+csv_list.sh:
+	Shell script used to just generate the csv file
+lab2_list.gp:
+	Program used to generate the graph png files. Project 2A's gp file allowed me to write this up,
+	although I had to include regular expressions to deal with overlapping cases.
+
+2.3.1
+	Most of the CPU time for 1 or 2 thread lists goes towards the actual list operations. Locking
+	and performing these list operations, in that order, are the most expensive parts of the code
+	because they access shared resources across multiple threads. Acquiring time spent getting a
+	mutex lock is by comparison a much cheaper operation, considering that it also uses mostly local
+	variables. In high thread spinlock tests most of the CPU time is spent on spinning the lock.
+	However, the mutex test cases do not use CPU time while waiting for the lock, so most of the CPU
+	time for mutex lists are still spent of list operations.
+2.3.2
+	
+
+2.3.3
+
+2.3.4

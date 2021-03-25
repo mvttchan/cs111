@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./lab2_list.c --iterations=1000 --sync=m --threads=1

@@ -1,0 +1,44 @@
+NAME: Matthew Chan
+EMAIL: matthew_2185@yahoo.com
+ID: 805291212
+
+lab0.c:
+This program reads input character by character from file descriptor 0 and writes to file
+descriptor 1. These file descriptors can be adjusted using the --input and --output options.
+If there are any I/O errors, the program terminates with exit code 2 for input and 3 for
+output. The program can also cause a segmentation fault with the --segfault option and 
+the program can also handle that error using the --catch option. Any other options used 
+for this program throws an error and exits with code 1.
+
+Makefile:
+This is a standard makefile with -Wall, -Wextra, and -g options included, as per the project
+spec. Make clean removes unnecessary files and dist makes the tarball needed for submission.
+Make check runs smoke tests on the program to test basic functionality.
+
+backtrace.png:
+Screenshot of GDB's stack backtrace when running the program with the --segfault option
+
+breakpoint.png
+An inspection of the variables that caused the segmantation fault
+
+Smoke tests:
+
+regular_test:
+io_comparison: These two just check to make sure if --input and --output options work under
+normal circumstances, no monkey business
+
+fake_input: This is a monkey business test. This test just checks to make sure if the program
+detects any errors in opening non existant input files
+
+segfault_test: This test just sees if the segmentation fault is found with the correct exit
+code of 4
+
+fake_argument: More monkey business. Just checks to make sure if the argument is one of the
+four allowed
+
+
+References:
+Project 0 spec on CCLE
+Week 1 Section A Discussion Slides
+https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html
+fd juggling from the project spec

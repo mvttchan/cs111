@@ -1,0 +1,303 @@
+Total: 1291 samples
+    1104  85.5%  85.5%     1291 100.0% thread_worker
+      70   5.4%  90.9%       70   5.4% SortedList_length
+      61   4.7%  95.7%       61   4.7% SortedList_insert
+      56   4.3% 100.0%       56   4.3% SortedList_lookup
+       0   0.0% 100.0%     1291 100.0% ?? /usr/src/debug////////glibc-2.17-c758a686/misc/../sysdeps/unix/sysv/linux/x86_64/clone.S:118
+       0   0.0% 100.0%     1291 100.0% start_thread
+ROUTINE ====================== thread_worker in /u/cs/ugrad/cuico/lab2b/lab2_list.c
+  1104   1291 Total samples (flat / cumulative)
+     .      .   35: void segfault_handler() {
+     .      .   36:   fprintf(stderr, "Segfault found\n");
+     .      .   37:   exit(2);
+     .      .   38: }
+     .      .   39: 
+---
+     .      .   40: void* thread_worker(void* startaddress) {
+     .      .   41:   int i;
+     .      .   42:   int length;
+     .      .   43:   int delete_value;
+     .      .   44:   SortedListElement_t* offset = startaddress;
+     .      .   45:   SortedListElement_t* delete_key;
+     .      .   46:   struct timespec start_time, end_time;
+     .      .   47:   int hash_val;
+     .      .   48:   //insert
+     .      .   49:   switch(sync_flag) {
+     .      .   50:   case 0:
+     .      .   51:     //unprotected
+     .      .   52:     for(i = 0; i < iterations; ++i) {
+     .      .   53:       hash_val = (*((offset[i].key))%list_count);
+     .      .   54:       SortedList_insert(&list[hash_val], &offset[i]);
+     .      .   55:     }
+     .      .   56:     for(i = 0; i < iterations; ++i) {
+     .      .   57:       hash_val = (*((offset[i].key))%list_count);
+     .      .   58:       if(SortedList_length(&list[hash_val]) == -1) {
+     .      .   59: 	fprintf(stderr, "Corrupted list, unprotected length\n");
+     .      .   60: 	exit(2);
+     .      .   61:       }
+     .      .   62:     }
+     .      .   63:     for(i = 0; i < iterations; ++i) {
+     .      .   64:       hash_val = (*((offset[i].key))%list_count);
+     .      .   65:       if((delete_key = SortedList_lookup(&list[hash_val], offset[i].key)) == NULL) {
+     .      .   66: 	fprintf(stderr, "Corrupted list, unprotected look up\n");
+     .      .   67: 	exit(2);
+     .      .   68:       }
+     .      .   69:       if(SortedList_delete(delete_key) != 0) {
+     .      .   70: 	fprintf(stderr, "Corrupted list, unprotected delete\n");
+     .      .   71: 	exit(2);
+     .      .   72:       }
+     .      .   73:     }
+     .      .   74:     break;
+     .      .   75:   case 1:
+     .      .   76:     //mutex
+     .      .   77:     for(i = 0; i < iterations; ++i) {
+     .      .   78:       hash_val = (*((offset[i].key))%list_count);
+     .      .   79:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+     .      .   80:       pthread_mutex_lock(&mutex[hash_val]);
+     .      .   81:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .   82:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .      .   83:       SortedList_insert(&list[hash_val], &offset[i]);
+     .      .   84:       pthread_mutex_unlock(&mutex[hash_val]);
+     .      .   85:     }
+     .      .   86:     for(i = 0; i < iterations; ++i) {
+     .      .   87:       hash_val = (*((offset[i].key))%list_count);
+     .      .   88:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+     .      .   89:       pthread_mutex_lock(&mutex[hash_val]);
+     .      .   90:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .   91:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .      .   92:       length = SortedList_length(&list[hash_val]);
+     .      .   93:       pthread_mutex_unlock(&mutex[hash_val]);
+     .      .   94:       if(length == -1) {
+     .      .   95:         fprintf(stderr, "Corrupted list, unprotected length\n");
+     .      .   96:         exit(2);
+     .      .   97:       }
+     .      .   98:     }
+     .      .   99:     for(i = 0; i < iterations; ++i) {
+     .      .  100:       hash_val = (*((offset[i].key))%list_count);
+     .      .  101:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+     .      .  102:       pthread_mutex_lock(&mutex[hash_val]);
+     .      .  103:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  104:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .      .  105:       delete_key = SortedList_lookup(&list[hash_val], offset[i].key);
+     .      .  106:       //      pthread_mutex_unlock(&mutex);
+     .      .  107:       if(delete_key == NULL) {
+     .      .  108:         fprintf(stderr, "Corrupted list, unprotected look up\n");
+     .      .  109:         exit(2);
+     .      .  110:       }
+     .      .  111:       //pthread_mutex_lock(&mutex);
+     .      .  112:       delete_value = SortedList_delete(delete_key);
+     .      .  113:       //pthread_mutex_unlock(&mutex);
+     .      .  114:       if(delete_value != 0) {
+     .      .  115:         fprintf(stderr, "Corrupted list, unprotected delete\n");
+     .      .  116:         exit(2);
+     .      .  117:       }
+     .      .  118:       pthread_mutex_unlock(&mutex[hash_val]);
+     .      .  119:     }
+     .      .  120:     break;
+     .      .  121:   case 2:
+     .      .  122:     //spinlock
+     .      .  123:     for(i = 0; i < iterations; ++i) {
+     1      1  124:       hash_val = (*((offset[i].key))%list_count);
+     .      .  125:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+   309    309  126:       while(__sync_lock_test_and_set(&spin_lock[hash_val], 1));
+     .      .  127:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  128:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .     61  129:       SortedList_insert(&list[hash_val], &offset[i]);
+     .      .  130:       __sync_lock_release(&spin_lock[hash_val]);
+     .      .  131:     }
+     .      .  132:     for(i = 0; i < iterations; ++i) {
+     .      .  133:       hash_val = (*((offset[i].key))%list_count);
+     .      .  134:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+   579    579  135:       while(__sync_lock_test_and_set(&spin_lock[hash_val], 1));
+     .      .  136:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  137:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .     70  138:       length = SortedList_length(&list[hash_val]);
+     .      .  139:       __sync_lock_release(&spin_lock[hash_val]);
+     .      .  140:       if(length == -1) {
+     .      .  141:         fprintf(stderr, "Corrupted list, unprotected length\n");
+     .      .  142:         exit(2);
+     .      .  143:       }
+     .      .  144:     }
+     .      .  145:     for(i = 0; i < iterations; ++i) {
+     .      .  146:       hash_val = (*((offset[i].key))%list_count);
+     .      .  147:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+   215    215  148:       while(__sync_lock_test_and_set(&spin_lock[hash_val], 1));
+     .      .  149:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  150:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .     56  151:       delete_key = SortedList_lookup(&list[hash_val], offset[i].key);
+     .      .  152:       //      __sync_lock_release(&spin_lock);
+     .      .  153:       if(delete_key == NULL) {
+     .      .  154:         fprintf(stderr, "Corrupted list, unprotected look up\n");
+     .      .  155:         exit(2);
+     .      .  156:       }
+     .      .  157:       //      while(__sync_lock_test_and_set(&spin_lock, 1));
+     .      .  158:       delete_value = SortedList_delete(delete_key);
+     .      .  159:       //      __sync_lock_release(&spin_lock);
+     .      .  160:       if(delete_value != 0) {
+     .      .  161:         fprintf(stderr, "Corrupted list, unprotected delete\n");
+     .      .  162:         exit(2);	
+     .      .  163:       }
+     .      .  164:       __sync_lock_release(&spin_lock[hash_val]);
+     .      .  165:     }
+     .      .  166:     break;
+     .      .  167:   default:
+     .      .  168:     fprintf(stderr, "Shouldn't reach this point\n");
+     .      .  169:     exit(2);
+     .      .  170:   }
+     .      .  171:   
+     .      .  172:   return NULL;
+     .      .  173: }
+---
+     .      .  174: 
+     .      .  175: int main(int argc, char* argv[]) {
+     .      .  176: 
+     .      .  177:   signal(SIGSEGV, segfault_handler);
+     .      .  178:   int index_yield = 0;
+ROUTINE ====================== thread_worker in /u/cs/ugrad/cuico/lab2b/lab2_list.c
+  1104   1291 Total samples (flat / cumulative)
+     .      .   35: void segfault_handler() {
+     .      .   36:   fprintf(stderr, "Segfault found\n");
+     .      .   37:   exit(2);
+     .      .   38: }
+     .      .   39: 
+---
+     .      .   40: void* thread_worker(void* startaddress) {
+     .      .   41:   int i;
+     .      .   42:   int length;
+     .      .   43:   int delete_value;
+     .      .   44:   SortedListElement_t* offset = startaddress;
+     .      .   45:   SortedListElement_t* delete_key;
+     .      .   46:   struct timespec start_time, end_time;
+     .      .   47:   int hash_val;
+     .      .   48:   //insert
+     .      .   49:   switch(sync_flag) {
+     .      .   50:   case 0:
+     .      .   51:     //unprotected
+     .      .   52:     for(i = 0; i < iterations; ++i) {
+     .      .   53:       hash_val = (*((offset[i].key))%list_count);
+     .      .   54:       SortedList_insert(&list[hash_val], &offset[i]);
+     .      .   55:     }
+     .      .   56:     for(i = 0; i < iterations; ++i) {
+     .      .   57:       hash_val = (*((offset[i].key))%list_count);
+     .      .   58:       if(SortedList_length(&list[hash_val]) == -1) {
+     .      .   59: 	fprintf(stderr, "Corrupted list, unprotected length\n");
+     .      .   60: 	exit(2);
+     .      .   61:       }
+     .      .   62:     }
+     .      .   63:     for(i = 0; i < iterations; ++i) {
+     .      .   64:       hash_val = (*((offset[i].key))%list_count);
+     .      .   65:       if((delete_key = SortedList_lookup(&list[hash_val], offset[i].key)) == NULL) {
+     .      .   66: 	fprintf(stderr, "Corrupted list, unprotected look up\n");
+     .      .   67: 	exit(2);
+     .      .   68:       }
+     .      .   69:       if(SortedList_delete(delete_key) != 0) {
+     .      .   70: 	fprintf(stderr, "Corrupted list, unprotected delete\n");
+     .      .   71: 	exit(2);
+     .      .   72:       }
+     .      .   73:     }
+     .      .   74:     break;
+     .      .   75:   case 1:
+     .      .   76:     //mutex
+     .      .   77:     for(i = 0; i < iterations; ++i) {
+     .      .   78:       hash_val = (*((offset[i].key))%list_count);
+     .      .   79:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+     .      .   80:       pthread_mutex_lock(&mutex[hash_val]);
+     .      .   81:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .   82:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .      .   83:       SortedList_insert(&list[hash_val], &offset[i]);
+     .      .   84:       pthread_mutex_unlock(&mutex[hash_val]);
+     .      .   85:     }
+     .      .   86:     for(i = 0; i < iterations; ++i) {
+     .      .   87:       hash_val = (*((offset[i].key))%list_count);
+     .      .   88:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+     .      .   89:       pthread_mutex_lock(&mutex[hash_val]);
+     .      .   90:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .   91:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .      .   92:       length = SortedList_length(&list[hash_val]);
+     .      .   93:       pthread_mutex_unlock(&mutex[hash_val]);
+     .      .   94:       if(length == -1) {
+     .      .   95:         fprintf(stderr, "Corrupted list, unprotected length\n");
+     .      .   96:         exit(2);
+     .      .   97:       }
+     .      .   98:     }
+     .      .   99:     for(i = 0; i < iterations; ++i) {
+     .      .  100:       hash_val = (*((offset[i].key))%list_count);
+     .      .  101:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+     .      .  102:       pthread_mutex_lock(&mutex[hash_val]);
+     .      .  103:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  104:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .      .  105:       delete_key = SortedList_lookup(&list[hash_val], offset[i].key);
+     .      .  106:       //      pthread_mutex_unlock(&mutex);
+     .      .  107:       if(delete_key == NULL) {
+     .      .  108:         fprintf(stderr, "Corrupted list, unprotected look up\n");
+     .      .  109:         exit(2);
+     .      .  110:       }
+     .      .  111:       //pthread_mutex_lock(&mutex);
+     .      .  112:       delete_value = SortedList_delete(delete_key);
+     .      .  113:       //pthread_mutex_unlock(&mutex);
+     .      .  114:       if(delete_value != 0) {
+     .      .  115:         fprintf(stderr, "Corrupted list, unprotected delete\n");
+     .      .  116:         exit(2);
+     .      .  117:       }
+     .      .  118:       pthread_mutex_unlock(&mutex[hash_val]);
+     .      .  119:     }
+     .      .  120:     break;
+     .      .  121:   case 2:
+     .      .  122:     //spinlock
+     .      .  123:     for(i = 0; i < iterations; ++i) {
+     1      1  124:       hash_val = (*((offset[i].key))%list_count);
+     .      .  125:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+   309    309  126:       while(__sync_lock_test_and_set(&spin_lock[hash_val], 1));
+     .      .  127:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  128:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .     61  129:       SortedList_insert(&list[hash_val], &offset[i]);
+     .      .  130:       __sync_lock_release(&spin_lock[hash_val]);
+     .      .  131:     }
+     .      .  132:     for(i = 0; i < iterations; ++i) {
+     .      .  133:       hash_val = (*((offset[i].key))%list_count);
+     .      .  134:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+   579    579  135:       while(__sync_lock_test_and_set(&spin_lock[hash_val], 1));
+     .      .  136:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  137:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .     70  138:       length = SortedList_length(&list[hash_val]);
+     .      .  139:       __sync_lock_release(&spin_lock[hash_val]);
+     .      .  140:       if(length == -1) {
+     .      .  141:         fprintf(stderr, "Corrupted list, unprotected length\n");
+     .      .  142:         exit(2);
+     .      .  143:       }
+     .      .  144:     }
+     .      .  145:     for(i = 0; i < iterations; ++i) {
+     .      .  146:       hash_val = (*((offset[i].key))%list_count);
+     .      .  147:       clock_gettime(CLOCK_MONOTONIC, &start_time);
+   215    215  148:       while(__sync_lock_test_and_set(&spin_lock[hash_val], 1));
+     .      .  149:       clock_gettime(CLOCK_MONOTONIC, &end_time);
+     .      .  150:       lock_wait += ((end_time.tv_sec - start_time.tv_sec) * 1000000000) + (end_time.tv_nsec - start_time.tv_nsec);
+     .     56  151:       delete_key = SortedList_lookup(&list[hash_val], offset[i].key);
+     .      .  152:       //      __sync_lock_release(&spin_lock);
+     .      .  153:       if(delete_key == NULL) {
+     .      .  154:         fprintf(stderr, "Corrupted list, unprotected look up\n");
+     .      .  155:         exit(2);
+     .      .  156:       }
+     .      .  157:       //      while(__sync_lock_test_and_set(&spin_lock, 1));
+     .      .  158:       delete_value = SortedList_delete(delete_key);
+     .      .  159:       //      __sync_lock_release(&spin_lock);
+     .      .  160:       if(delete_value != 0) {
+     .      .  161:         fprintf(stderr, "Corrupted list, unprotected delete\n");
+     .      .  162:         exit(2);	
+     .      .  163:       }
+     .      .  164:       __sync_lock_release(&spin_lock[hash_val]);
+     .      .  165:     }
+     .      .  166:     break;
+     .      .  167:   default:
+     .      .  168:     fprintf(stderr, "Shouldn't reach this point\n");
+     .      .  169:     exit(2);
+     .      .  170:   }
+     .      .  171:   
+     .      .  172:   return NULL;
+     .      .  173: }
+---
+     .      .  174: 
+     .      .  175: int main(int argc, char* argv[]) {
+     .      .  176: 
+     .      .  177:   signal(SIGSEGV, segfault_handler);
+     .      .  178:   int index_yield = 0;

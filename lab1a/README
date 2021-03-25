@@ -1,0 +1,21 @@
+NAME:	Matthew Chan
+EMAIL:	matthew_2185@yahoo.com
+ID:	805291212
+
+lab1a.c:
+	C program that sets the terminal into a non canonical no echo mode. It supports
+	the option --shell and runs the specified program, like "ls". The program forks
+	to run the shell and performs inter process communication using pipes.
+Makefile:
+	Makes a tarball with with the C file, Makefile, and this README. It has a default
+	state as well as clean and dist
+The first part of getting the program to work non canonically no echo was easy to test
+modularity on, however the second part required me to code for a long stretch without
+knowing if the code really worked at that point. However, the discussions really helped
+provide a framework for the order in which I should code. These sections were essential
+for completing my program
+
+Sources:
+1A Discussion Slides
+1B Dicussion Slides
+Project 1A Spec

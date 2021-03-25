@@ -1,0 +1,22 @@
+#NAME: Matthew Chan
+#EMAIL: matthew_2185@yahoo.com
+#ID: 805291212
+
+default:
+	gcc -lpthread -g -Wall -Wextra lab2_list.c SortedList.c -o lab2_list
+clean:
+	rm -f lab2_list *.tar.gz
+tests:
+	chmod 777 csv_list.sh
+	-./csv_list.sh
+graphs:
+	chmod 777 lab2_list.gp
+	./lab2_list.gp
+profile:
+	-rm -f profile.gperf
+	LD_PRELOAD=/usr/lib64/libprofiler.so CPUPROFILE=profile.gperf ./lab2_list --iterations=1000 --threads=12 --sync=s
+	pprof --text lab2_list profile.gperf > profile.out
+	pprof --list=thread_worker lab2_list profile.gperf >> profile.out
+	-rm -f profile.gperf
+dist: clean default tests graphs
+	tar -czvf lab2b-805291212.tar.gz lab2_list.c SortedList.h SortedList.c Makefile lab2b_list.csv lab2b_1.png lab2b_2.png lab2b_3.png lab2b_4.png lab2b_5.png README csv_list.sh lab2_list.gp profile.out

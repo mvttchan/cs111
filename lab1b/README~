@@ -1,0 +1,17 @@
+NAME:	Matthew Chan
+EMAIL:	matthew_2185@yahoo.com
+ID:	805291212
+
+lab1b-client.c:
+lab1b-server.c:
+Makefile: I had to make sure the default option makes both c files into their own objects, since it
+	  appeared to be part of the sanity check. The clean option removes previous object files as
+	  well as any existing tarballs. The dist option simply packs both C files as well as the README
+	  and this Makefile
+README:
+
+Project 1B Specs
+https://www.zlib.net/manual.html
+https://linux.die.net/man/2/creat
+Discussion 1A Slides
+Discussion 1B Slides

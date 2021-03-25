@@ -1,0 +1,21 @@
+#NAME: Matthew Chan
+#EMAIL: matthew_2185@yahoo.com
+#ID: 805291212
+
+default:
+	gcc -lpthread -Wall -Wextra lab2_add.c -o lab2_add
+	gcc -lpthread -Wall -Wextra lab2_list.c SortedList.c -o lab2_list
+clean:
+	rm -f lab2_add lab2_list *.tar.gz
+
+tests:
+	chmod 777 csv_add.sh
+	-./csv_add.sh
+	chmod 777 csv_list.sh
+	-./csv_list.sh
+graphs:
+	./lab2_add.gp
+	./lab2_list.gp
+
+dist: default tests graphs
+	tar -czvf lab2a-805291212.tar.gz lab2_add.c lab2_list.c SortedList.h SortedList.c Makefile lab2_add.csv lab2_list.csv lab2_add-1.png lab2_add-2.png lab2_add-3.png lab2_add-4.png lab2_add-5.png lab2_list-1.png lab2_list-2.png lab2_list-3.png lab2_list-4.png README csv_add.sh csv_list.sh lab2_add.gp lab2_list.gp
